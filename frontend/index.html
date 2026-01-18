@@ -643,9 +643,8 @@
                     rowsPerPage: 10,
                     sortBy: 'relevance',
                     viewMode: 'grid',
-                    apiUrl: window.location.hostname === 'localhost' 
-                        ? 'http://localhost:3000/api/search'
-                        : `http://${window.location.hostname}:3000/api/search`
+                    // Usar ruta relativa para que nginx haga el proxy
+                    apiUrl: '/api/search'
                 }
             },
             methods: {
