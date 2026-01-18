@@ -3,8 +3,6 @@ FROM nginx:alpine
 
 # Copiar archivos del frontend al directorio de nginx
 COPY index.html /usr/share/nginx/html/
-COPY styles.css /usr/share/nginx/html/
-COPY app.js /usr/share/nginx/html/
 COPY README.md /usr/share/nginx/html/
 
 # Copiar configuración personalizada de nginx
