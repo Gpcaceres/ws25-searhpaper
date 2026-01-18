@@ -1,9 +1,10 @@
 # Usar imagen de nginx para servir archivos estáticos
 FROM nginx:alpine
 
-# Copiar archivos del frontend al directorio de nginx
+# Copiar todos los archivos del frontend al directorio de nginx
 COPY index.html /usr/share/nginx/html/
-COPY README.md /usr/share/nginx/html/
+COPY css/ /usr/share/nginx/html/css/
+COPY js/ /usr/share/nginx/html/js/
 
 # Copiar configuración personalizada de nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
