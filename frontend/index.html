@@ -56,6 +56,48 @@
             margin-bottom: 15px;
         }
 
+        .search-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sort-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .sort-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+            min-width: 200px;
+        }
+
+        .sort-select:hover {
+            border-color: #667eea;
+        }
+
+        .sort-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         .search-input {
             flex: 1;
             padding: 15px 20px;
@@ -321,8 +363,20 @@
                     {{ loading ? 'Buscando...' : 'Buscar' }}
                 </button>
             </div>
-            <div class="results-info" v-if="results">
-                Mostrando {{ results.papers.length }} de {{ results.totalResults }} resultados
+            <div class="search-controls" v-if="results">
+                <div class="results-info">
+                    Mostrando {{ results.papers.length }} de {{ results.totalResults }} resultados
+                </div>
+                <div class="sort-container">
+                    <label class="sort-label">Ordenar por:</label>
+                    <select v-model="sortBy" @change="changeSortOrder" class="sort-select">
+                        <option value="relevance">Relevancia</option>
+                        <option value="year-desc">Año (más reciente)</option>
+                        <option value="year-asc">Año (más antiguo)</option>
+                        <option value="title-asc">Título (A-Z)</option>
+                        <option value="title-desc">Título (Z-A)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -405,6 +459,7 @@
                     error: null,
                     currentPage: 1,
                     rowsPerPage: 10,
+                    sortBy: 'relevance',
                     apiUrl: window.location.hostname === 'localhost' 
                         ? 'http://localhost:3000/api/search'
                         : `http://${window.location.hostname}:3000/api/search`
@@ -432,12 +487,59 @@
                         });
                         
                         this.results = response.data;
+                        this.sortResults();
                     } catch (err) {
                         this.error = err.response?.data?.message || 'Error al buscar artículos. Asegúrate de que el servidor esté corriendo.';
                         console.error('Search error:', err);
                     } finally {
                         this.loading = false;
                     }
+                },
+                
+                sortResults() {
+                    if (!this.results || !this.results.papers) return;
+                    
+                    const papers = [...this.results.papers];
+                    
+                    switch(this.sortBy) {
+                        case 'year-desc':
+                            papers.sort((a, b) => {
+                                const dateA = new Date(a.publicationDate || 0);
+                                const dateB = new Date(b.publicationDate || 0);
+                                return dateB - dateA;
+                            });
+                            break;
+                        case 'year-asc':
+                            papers.sort((a, b) => {
+                                const dateA = new Date(a.publicationDate || 0);
+                                const dateB = new Date(b.publicationDate || 0);
+                                return dateA - dateB;
+                            });
+                            break;
+                        case 'title-asc':
+                            papers.sort((a, b) => {
+                                const titleA = (a.title || '').toLowerCase();
+                                const titleB = (b.title || '').toLowerCase();
+                                return titleA.localeCompare(titleB);
+                            });
+                            break;
+                        case 'title-desc':
+                            papers.sort((a, b) => {
+                                const titleA = (a.title || '').toLowerCase();
+                                const titleB = (b.title || '').toLowerCase();
+                                return titleB.localeCompare(titleA);
+                            });
+                            break;
+                        default:
+                            // relevance - no sorting needed (API default)
+                            break;
+                    }
+                    
+                    this.results.papers = papers;
+                },
+                
+                changeSortOrder() {
+                    this.sortResults();
                 },
                 
                 async goToPage(page) {
