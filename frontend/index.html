@@ -405,7 +405,9 @@
                     error: null,
                     currentPage: 1,
                     rowsPerPage: 10,
-                    apiUrl: 'http://localhost:3000/api/search'
+                    apiUrl: window.location.hostname === 'localhost' 
+                        ? 'http://localhost:3000/api/search'
+                        : `http://${window.location.hostname}:3000/api/search`
                 }
             },
             methods: {
