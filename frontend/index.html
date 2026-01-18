@@ -98,6 +98,98 @@
             box-shadow: 0 0 0 3px rgba(22, 104, 102, 0.1);
         }
 
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .view-button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .view-button.active {
+            background: white;
+            color: #166866;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .view-button:hover:not(.active) {
+            color: #166866;
+        }
+
+        .papers-list {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .papers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .papers-table thead {
+            background: linear-gradient(135deg, #166866 0%, #3E1669 100%);
+            color: white;
+        }
+
+        .papers-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .papers-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+
+        .papers-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .papers-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .table-authors {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
         .search-input {
             flex: 1;
             padding: 15px 20px;
@@ -268,28 +360,37 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             margin-top: 30px;
             padding: 20px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
         }
 
         .pagination button {
-            padding: 10px 20px;
-            border: 2px solid #166866;
+            min-width: 40px;
+            height: 40px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
             background: white;
-            color: #166866;
+            color: #333;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
         }
 
-        .pagination button:hover:not(:disabled) {
-            background: #166866;
+        .pagination button:hover:not(:disabled):not(.active) {
+            border-color: #166866;
+            color: #166866;
+        }
+
+        .pagination button.active {
+            background: linear-gradient(135deg, #166866 0%, #3E1669 100%);
             color: white;
+            border-color: #166866;
         }
 
         .pagination button:disabled {
@@ -297,8 +398,9 @@
             cursor: not-allowed;
         }
 
-        .pagination span {
-            color: #333;
+        .pagination .page-ellipsis {
+            padding: 8px 4px;
+            color: #999;
             font-weight: 600;
         }
 
@@ -367,15 +469,33 @@
                 <div class="results-info">
                     Mostrando {{ results.papers.length }} de {{ results.totalResults }} resultados
                 </div>
-                <div class="sort-container">
-                    <label class="sort-label">Ordenar por:</label>
-                    <select v-model="sortBy" @change="changeSortOrder" class="sort-select">
-                        <option value="relevance">Relevancia</option>
-                        <option value="year-desc">Año (más reciente)</option>
-                        <option value="year-asc">Año (más antiguo)</option>
-                        <option value="title-asc">Título (A-Z)</option>
-                        <option value="title-desc">Título (Z-A)</option>
-                    </select>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div class="view-toggle">
+                        <button 
+                            @click="toggleView('grid')" 
+                            class="view-button"
+                            :class="{ active: viewMode === 'grid' }"
+                        >
+                            🔲 Tarjetas
+                        </button>
+                        <button 
+                            @click="toggleView('list')" 
+                            class="view-button"
+                            :class="{ active: viewMode === 'list' }"
+                        >
+                            📋 Lista
+                        </button>
+                    </div>
+                    <div class="sort-container">
+                        <label class="sort-label">Ordenar:</label>
+                        <select v-model="sortBy" @change="changeSortOrder" class="sort-select">
+                            <option value="relevance">Relevancia</option>
+                            <option value="year-desc">Año (más reciente)</option>
+                            <option value="year-asc">Año (más antiguo)</option>
+                            <option value="title-asc">Título (A-Z)</option>
+                            <option value="title-desc">Título (Z-A)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -393,7 +513,8 @@
             No se encontraron resultados para "{{ searchQuery }}"
         </div>
 
-        <div v-if="!loading && results && results.papers.length > 0" class="papers-grid">
+        <!-- Vista de tarjetas -->
+        <div v-if="!loading && results && results.papers.length > 0 && viewMode === 'grid'" class="papers-grid">
             <div v-for="paper in results.papers" :key="paper.id" class="paper-card">
                 <h2 class="paper-title">{{ paper.title }}</h2>
                 
@@ -430,19 +551,80 @@
             </div>
         </div>
 
+        <!-- Vista de lista/tabla -->
+        <div v-if="!loading && results && results.papers.length > 0 && viewMode === 'list'" class="papers-list">
+            <table class="papers-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Title</th>
+                        <th style="width: 20%">Journal</th>
+                        <th style="width: 20%">Authors</th>
+                        <th style="width: 12%">Publication Date</th>
+                        <th style="width: 13%">DOI/Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="paper in results.papers" :key="paper.id">
+                        <td>
+                            <span class="table-title">{{ paper.title }}</span>
+                            <span class="badge" v-if="paper.articleType">{{ paper.articleType }}</span>
+                        </td>
+                        <td>{{ paper.journal || 'N/A' }}</td>
+                        <td class="table-authors">{{ formatAuthors(paper.authors) }}</td>
+                        <td>{{ formatDate(paper.publicationDate) }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <a :href="paper.downloadUrl" target="_blank" class="btn btn-primary" download title="Descargar PDF">
+                                    📥
+                                </a>
+                                <a :href="paper.viewUrl" target="_blank" class="btn btn-secondary" title="Ver artículo">
+                                    👁️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div v-if="results && results.totalPages > 1" class="pagination">
+            <button 
+                @click="goToPage(1)" 
+                :disabled="currentPage === 1"
+                title="Primera página"
+            >
+                ⏮️
+            </button>
             <button 
                 @click="goToPage(currentPage - 1)" 
                 :disabled="currentPage === 1"
             >
                 ← Anterior
             </button>
-            <span>Página {{ currentPage }} de {{ results.totalPages }}</span>
+            
+            <template v-for="page in getVisiblePages()" :key="page">
+                <span v-if="page === '...'" class="page-ellipsis">...</span>
+                <button 
+                    v-else
+                    @click="goToPage(page)" 
+                    :class="{ active: currentPage === page }"
+                >
+                    {{ page }}
+                </button>
+            </template>
+            
             <button 
                 @click="goToPage(currentPage + 1)" 
                 :disabled="currentPage === results.totalPages"
             >
                 Siguiente →
+            </button>
+            <button 
+                @click="goToPage(results.totalPages)" 
+                :disabled="currentPage === results.totalPages"
+                title="Última página"
+            >
+                ⏭️
             </button>
         </div>
     </div>
@@ -460,6 +642,7 @@
                     currentPage: 1,
                     rowsPerPage: 10,
                     sortBy: 'relevance',
+                    viewMode: 'grid',
                     apiUrl: window.location.hostname === 'localhost' 
                         ? 'http://localhost:3000/api/search'
                         : `http://${window.location.hostname}:3000/api/search`
@@ -540,6 +723,33 @@
                 
                 changeSortOrder() {
                     this.sortResults();
+                },
+                
+                toggleView(mode) {
+                    this.viewMode = mode;
+                },
+                
+                getVisiblePages() {
+                    if (!this.results) return [];
+                    const total = this.results.totalPages;
+                    const current = this.currentPage;
+                    const pages = [];
+                    
+                    if (total <= 7) {
+                        for (let i = 1; i <= total; i++) {
+                            pages.push(i);
+                        }
+                    } else {
+                        if (current <= 3) {
+                            pages.push(1, 2, 3, 4, '...', total);
+                        } else if (current >= total - 2) {
+                            pages.push(1, '...', total - 3, total - 2, total - 1, total);
+                        } else {
+                            pages.push(1, '...', current - 1, current, current + 1, '...', total);
+                        }
+                    }
+                    
+                    return pages;
                 },
                 
                 async goToPage(page) {
