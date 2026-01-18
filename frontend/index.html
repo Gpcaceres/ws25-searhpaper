@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SearchPaper - Buscador de Artículos Científicos</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-button {
+            padding: 15px 40px;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-info {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        .papers-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .paper-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .paper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .paper-title {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .paper-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .paper-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .paper-authors {
+            color: #555;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .paper-abstract {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            max-height: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .paper-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .paper-card {
+                padding: 20px;
+            }
+
+            .paper-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>🔬 SearchPaper</h1>
+            <p>Busca artículos científicos en PLOS</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    v-model="searchQuery" 
+                    @keyup.enter="search"
+                    placeholder="Busca artículos científicos... (ej: climate change, covid-19, machine learning)"
+                    class="search-input"
+                    :disabled="loading"
+                >
+                <button 
+                    @click="search" 
+                    class="search-button"
+                    :disabled="loading || !searchQuery.trim()"
+                >
+                    {{ loading ? 'Buscando...' : 'Buscar' }}
+                </button>
+            </div>
+            <div class="results-info" v-if="results">
+                Mostrando {{ results.papers.length }} de {{ results.totalResults }} resultados
+            </div>
+        </div>
+
+        <div v-if="error" class="error">
+            <strong>Error:</strong> {{ error }}
+        </div>
+
+        <div v-if="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <div>Buscando artículos científicos...</div>
+        </div>
+
+        <div v-if="!loading && results && results.papers.length === 0" class="no-results">
+            No se encontraron resultados para "{{ searchQuery }}"
+        </div>
+
+        <div v-if="!loading && results && results.papers.length > 0" class="papers-grid">
+            <div v-for="paper in results.papers" :key="paper.id" class="paper-card">
+                <h2 class="paper-title">{{ paper.title }}</h2>
+                
+                <div class="paper-meta">
+                    <div class="paper-meta-item">
+                        <span>📅</span>
+                        <span>{{ formatDate(paper.publicationDate) }}</span>
+                    </div>
+                    <div class="paper-meta-item" v-if="paper.journal">
+                        <span>📖</span>
+                        <span>{{ paper.journal }}</span>
+                    </div>
+                    <div class="paper-meta-item" v-if="paper.articleType">
+                        <span class="badge">{{ paper.articleType }}</span>
+                    </div>
+                </div>
+
+                <div class="paper-authors" v-if="paper.authors.length > 0">
+                    <strong>Autores:</strong> {{ formatAuthors(paper.authors) }}
+                </div>
+
+                <div class="paper-abstract" v-if="paper.abstract">
+                    {{ paper.abstract }}
+                </div>
+
+                <div class="paper-actions">
+                    <a :href="paper.downloadUrl" target="_blank" class="btn btn-primary" download>
+                        📥 Descargar PDF
+                    </a>
+                    <a :href="paper.viewUrl" target="_blank" class="btn btn-secondary">
+                        👁️ Ver artículo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="results && results.totalPages > 1" class="pagination">
+            <button 
+                @click="goToPage(currentPage - 1)" 
+                :disabled="currentPage === 1"
+            >
+                ← Anterior
+            </button>
+            <span>Página {{ currentPage }} de {{ results.totalPages }}</span>
+            <button 
+                @click="goToPage(currentPage + 1)" 
+                :disabled="currentPage === results.totalPages"
+            >
+                Siguiente →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    searchQuery: '',
+                    results: null,
+                    loading: false,
+                    error: null,
+                    currentPage: 1,
+                    rowsPerPage: 10,
+                    apiUrl: 'http://localhost:3000/api/search'
+                }
+            },
+            methods: {
+                async search() {
+                    if (!this.searchQuery.trim()) return;
+                    
+                    this.currentPage = 1;
+                    await this.fetchResults();
+                },
+                
+                async fetchResults() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        const response = await axios.get(this.apiUrl, {
+                            params: {
+                                q: this.searchQuery,
+                                page: this.currentPage,
+                                rows: this.rowsPerPage
+                            }
+                        });
+                        
+                        this.results = response.data;
+                    } catch (err) {
+                        this.error = err.response?.data?.message || 'Error al buscar artículos. Asegúrate de que el servidor esté corriendo.';
+                        console.error('Search error:', err);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async goToPage(page) {
+                    if (page < 1 || page > this.results.totalPages) return;
+                    
+                    this.currentPage = page;
+                    await this.fetchResults();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                
+                formatDate(dateString) {
+                    if (!dateString) return 'N/A';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('es-ES', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                },
+                
+                formatAuthors(authors) {
+                    if (!authors || authors.length === 0) return 'No especificado';
+                    if (authors.length <= 3) return authors.join(', ');
+                    return `${authors.slice(0, 3).join(', ')} et al.`;
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

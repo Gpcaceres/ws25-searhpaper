@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: searchpaper-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PLOS_API_URL=https://api.plos.org/search
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm start
+    networks:
+      - searchpaper-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: searchpaper-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - searchpaper-network
+
+networks:
+  searchpaper-network:
+    driver: bridge
