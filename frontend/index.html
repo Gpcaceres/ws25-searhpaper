@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SearchPaper - Buscador de Artículos Científicos</title>
+    <title>SearchPaper - Scientific Articles Finder</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -12,7 +12,7 @@
     <div id="app">
         <div class="header">
             <h1>🔬 SearchPaper</h1>
-            <p>Busca artículos científicos en PLOS</p>
+            <p>Search scientific articles in PLOS</p>
         </div>
 
         <div class="search-container">
@@ -21,7 +21,7 @@
                     type="text" 
                     v-model="searchQuery" 
                     @keyup.enter="search"
-                    placeholder="Busca artículos científicos... (ej: climate change, covid-19, machine learning)"
+                    placeholder="Search scientific articles... (e.g., climate change, covid-19, machine learning)"
                     class="search-input"
                     :disabled="loading"
                 >
@@ -30,12 +30,12 @@
                     class="search-button"
                     :disabled="loading || !searchQuery.trim()"
                 >
-                    {{ loading ? 'Buscando...' : 'Buscar' }}
+                    {{ loading ? 'Searching...' : 'Search' }}
                 </button>
             </div>
             <div class="search-controls" v-if="results">
                 <div class="results-info">
-                    Mostrando {{ results.papers.length }} de {{ results.totalResults }} resultados
+                    Showing {{ results.papers.length }} of {{ results.totalResults }} results
                 </div>
                 <div style="display: flex; gap: 15px; align-items: center;">
                     <div class="view-toggle">
@@ -44,24 +44,24 @@
                             class="view-button"
                             :class="{ active: viewMode === 'grid' }"
                         >
-                            🔲 Tarjetas
+                            🔲 Cards
                         </button>
                         <button 
                             @click="toggleView('list')" 
                             class="view-button"
                             :class="{ active: viewMode === 'list' }"
                         >
-                            📋 Lista
+                            📋 List
                         </button>
                     </div>
                     <div class="sort-container">
-                        <label class="sort-label">Ordenar:</label>
+                        <label class="sort-label">Sort by:</label>
                         <select v-model="sortBy" @change="changeSortOrder" class="sort-select">
-                            <option value="relevance">Relevancia</option>
-                            <option value="year-desc">Año (más reciente)</option>
-                            <option value="year-asc">Año (más antiguo)</option>
-                            <option value="title-asc">Título (A-Z)</option>
-                            <option value="title-desc">Título (Z-A)</option>
+                            <option value="relevance">Relevance</option>
+                            <option value="year-desc">Year (newest)</option>
+                            <option value="year-asc">Year (oldest)</option>
+                            <option value="title-asc">Title (A-Z)</option>
+                            <option value="title-desc">Title (Z-A)</option>
                         </select>
                     </div>
                 </div>
@@ -74,11 +74,11 @@
 
         <div v-if="loading" class="loading">
             <div class="loading-spinner"></div>
-            <div>Buscando artículos científicos...</div>
+            <div>Searching scientific articles...</div>
         </div>
 
         <div v-if="!loading && results && results.papers.length === 0" class="no-results">
-            No se encontraron resultados para "{{ searchQuery }}"
+            No results found for "{{ searchQuery }}"
         </div>
 
         <!-- Vista de tarjetas -->
@@ -101,7 +101,7 @@
                 </div>
 
                 <div class="paper-authors" v-if="paper.authors.length > 0">
-                    <strong>Autores:</strong> {{ formatAuthors(paper.authors) }}
+                    <strong>Authors:</strong> {{ formatAuthors(paper.authors) }}
                 </div>
 
                 <div class="paper-abstract" v-if="paper.abstract">
@@ -110,10 +110,10 @@
 
                 <div class="paper-actions">
                     <a :href="paper.downloadUrl" target="_blank" class="btn btn-primary" download>
-                        📥 Descargar PDF
+                        📥 Download PDF
                     </a>
                     <a :href="paper.viewUrl" target="_blank" class="btn btn-secondary">
-                        👁️ Ver artículo
+                        👁️ View Article
                     </a>
                 </div>
             </div>
@@ -142,10 +142,10 @@
                         <td>{{ formatDate(paper.publicationDate) }}</td>
                         <td>
                             <div class="table-actions">
-                                <a :href="paper.downloadUrl" target="_blank" class="btn btn-primary" download title="Descargar PDF">
+                                <a :href="paper.downloadUrl" target="_blank" class="btn btn-primary" download title="Download PDF">
                                     📥
                                 </a>
-                                <a :href="paper.viewUrl" target="_blank" class="btn btn-secondary" title="Ver artículo">
+                                <a :href="paper.viewUrl" target="_blank" class="btn btn-secondary" title="View Article">
                                     👁️
                                 </a>
                             </div>
@@ -159,7 +159,7 @@
             <button 
                 @click="goToPage(1)" 
                 :disabled="currentPage === 1"
-                title="Primera página"
+                title="First page"
             >
                 ⏮️
             </button>
@@ -167,7 +167,7 @@
                 @click="goToPage(currentPage - 1)" 
                 :disabled="currentPage === 1"
             >
-                ← Anterior
+                ← Previous
             </button>
             
             <template v-for="page in getVisiblePages()" :key="page">
@@ -185,12 +185,12 @@
                 @click="goToPage(currentPage + 1)" 
                 :disabled="currentPage === results.totalPages"
             >
-                Siguiente →
+                Next →
             </button>
             <button 
                 @click="goToPage(results.totalPages)" 
                 :disabled="currentPage === results.totalPages"
-                title="Última página"
+                title="Last page"
             >
                 ⏭️
             </button>

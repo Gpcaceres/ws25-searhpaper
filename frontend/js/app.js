@@ -39,7 +39,7 @@ createApp({
                 this.results = response.data;
                 this.sortResults();
             } catch (err) {
-                this.error = err.response?.data?.message || 'Error al buscar artículos. Asegúrate de que el servidor esté corriendo.';
+                this.error = err.response?.data?.message || 'Error searching articles. Make sure the server is running.';
                 console.error('Search error:', err);
             } finally {
                 this.loading = false;
@@ -130,7 +130,7 @@ createApp({
         formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
-            return date.toLocaleDateString('es-ES', { 
+            return date.toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
@@ -138,7 +138,7 @@ createApp({
         },
         
         formatAuthors(authors) {
-            if (!authors || authors.length === 0) return 'No especificado';
+            if (!authors || authors.length === 0) return 'Not specified';
             if (authors.length <= 3) return authors.join(', ');
             return `${authors.slice(0, 3).join(', ')} et al.`;
         }
