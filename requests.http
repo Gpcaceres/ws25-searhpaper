@@ -1,0 +1,243 @@
+###############################################
+# SearchPaper API - HTTP Requests
+# Archivo para probar los endpoints del backend
+# Usar con extensiones: REST Client (VS Code) o similar
+###############################################
+
+### Variables
+# Cambiar entre local y producción comentando/descomentando:
+
+# PRODUCCIÓN
+@baseUrl = http://35.222.67.75:3000
+@frontendUrl = http://35.222.67.75:8080
+
+# LOCAL (comentado)
+# @baseUrl = http://localhost:3000
+# @frontendUrl = http://localhost:8080
+
+@apiUrl = {{baseUrl}}/api
+
+###############################################
+# HEALTH CHECK
+###############################################
+
+### 1. Health Check - Verificar que el servidor está funcionando
+GET {{baseUrl}}/api/health HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# BÚSQUEDA DE PAPERS
+###############################################
+
+### 2. Búsqueda simple - Buscar "cancer"
+GET {{apiUrl}}/search?q=cancer HTTP/1.1
+Content-Type: application/json
+
+
+### 3. Búsqueda con paginación - Página 1, 10 resultados
+GET {{apiUrl}}/search?q=covid&page=1&rows=10 HTTP/1.1
+Content-Type: application/json
+
+
+### 4. Búsqueda con paginación - Página 2, 20 resultados
+GET {{apiUrl}}/search?q=diabetes&page=2&rows=20 HTTP/1.1
+Content-Type: application/json
+
+
+### 5. Búsqueda de término complejo - Multiple palabras
+GET {{apiUrl}}/search?q=machine+learning HTTP/1.1
+Content-Type: application/json
+
+
+### 6. Búsqueda con filtros especiales - Año específico
+# Nota: PLOS API acepta queries SOLR complejas
+GET {{apiUrl}}/search?q=cancer+AND+publication_date:[2020-01-01T00:00:00Z+TO+2023-12-31T23:59:59Z] HTTP/1.1
+Content-Type: application/json
+
+
+### 7. Búsqueda por autor
+GET {{apiUrl}}/search?q=author:"John+Doe" HTTP/1.1
+Content-Type: application/json
+
+
+### 8. Búsqueda solo en título
+GET {{apiUrl}}/search?q=title:vaccine HTTP/1.1
+Content-Type: application/json
+
+
+### 9. Búsqueda con muchos resultados
+GET {{apiUrl}}/search?q=medicine&page=1&rows=50 HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# BÚSQUEDA DE ARTÍCULO ESPECÍFICO POR DOI
+###############################################
+
+### 10. Obtener artículo por DOI - Ejemplo 1
+GET {{apiUrl}}/search/article/10.1371/journal.pone.0123456 HTTP/1.1
+Content-Type: application/json
+
+
+### 11. Obtener artículo por DOI - Ejemplo 2 (DOI real de PLOS)
+GET {{apiUrl}}/search/article/10.1371/journal.pone.0000001 HTTP/1.1
+Content-Type: application/json
+
+
+### 12. Obtener artículo por DOI - Ejemplo con DOI largo
+GET {{apiUrl}}/search/article/10.1371/journal.pmed.0020124 HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# CASOS DE ERROR - Testing de validaciones
+###############################################
+
+### 13. ERROR - Búsqueda sin query (400 Bad Request)
+GET {{apiUrl}}/search HTTP/1.1
+Content-Type: application/json
+
+
+### 14. ERROR - Búsqueda con query vacío (400 Bad Request)
+GET {{apiUrl}}/search?q= HTTP/1.1
+Content-Type: application/json
+
+
+### 15. ERROR - Búsqueda con query solo espacios (400 Bad Request)
+GET {{apiUrl}}/search?q=%20%20%20 HTTP/1.1
+Content-Type: application/json
+
+
+### 16. ERROR - DOI inexistente (404 Not Found esperado)
+GET {{apiUrl}}/search/article/10.1371/journal.pone.9999999999 HTTP/1.1
+Content-Type: application/json
+
+
+### 17. ERROR - Endpoint inexistente (404 Not Found)
+GET {{apiUrl}}/search/nonexistent HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# PRUEBAS DE PAGINACIÓN
+###############################################
+
+### 18. Paginación - Primera página
+GET {{apiUrl}}/search?q=biology&page=1&rows=5 HTTP/1.1
+Content-Type: application/json
+
+
+### 19. Paginación - Última página (probando límites)
+GET {{apiUrl}}/search?q=biology&page=100&rows=5 HTTP/1.1
+Content-Type: application/json
+
+
+### 20. Paginación - Página negativa (debería manejarse)
+GET {{apiUrl}}/search?q=biology&page=-1&rows=5 HTTP/1.1
+Content-Type: application/json
+
+
+### 21. Paginación - Rows = 0 (edge case)
+GET {{apiUrl}}/search?q=biology&page=1&rows=0 HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# BÚSQUEDAS AVANZADAS (SOLR Queries)
+###############################################
+
+### 22. Búsqueda con operador AND
+GET {{apiUrl}}/search?q=cancer+AND+treatment HTTP/1.1
+Content-Type: application/json
+
+
+### 23. Búsqueda con operador OR
+GET {{apiUrl}}/search?q=covid+OR+coronavirus HTTP/1.1
+Content-Type: application/json
+
+
+### 24. Búsqueda con operador NOT
+GET {{apiUrl}}/search?q=cancer+NOT+treatment HTTP/1.1
+Content-Type: application/json
+
+
+### 25. Búsqueda por journal específico
+GET {{apiUrl}}/search?q=journal:"PLOS+ONE" HTTP/1.1
+Content-Type: application/json
+
+
+### 26. Búsqueda por tipo de artículo
+GET {{apiUrl}}/search?q=article_type:Research+Article HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# BÚSQUEDAS ESPECIALES
+###############################################
+
+### 27. Búsqueda con caracteres especiales
+GET {{apiUrl}}/search?q=COVID-19 HTTP/1.1
+Content-Type: application/json
+
+
+### 28. Búsqueda con números
+GET {{apiUrl}}/search?q=vitamin+D3 HTTP/1.1
+Content-Type: application/json
+
+
+### 29. Búsqueda con paréntesis (SOLR query compleja)
+GET {{apiUrl}}/search?q=(cancer+OR+tumor)+AND+treatment HTTP/1.1
+Content-Type: application/json
+
+
+### 30. Búsqueda de término muy largo
+GET {{apiUrl}}/search?q=neurodegenerative+diseases+alzheimer+parkinson+huntington HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# PERFORMANCE TESTING
+###############################################
+
+### 31. Gran cantidad de resultados - 100 papers
+GET {{apiUrl}}/search?q=health&page=1&rows=100 HTTP/1.1
+Content-Type: application/json
+
+
+### 32. Query muy específica (pocos resultados)
+GET {{apiUrl}}/search?q=title:"Very+Specific+Title+That+Probably+Does+Not+Exist" HTTP/1.1
+Content-Type: application/json
+
+
+###############################################
+# NOTAS DE USO
+###############################################
+
+# 1. Instalar extensión "REST Client" en VS Code
+# 2. Click en "Send Request" sobre cada ### request
+# 3. Los resultados aparecerán en una nueva pestaña
+# 4. Cambiar entre local/producción en las variables arriba
+# 5. PRODUCCIÓN: http://35.222.67.75:8080 (Frontend) y :3000 (Backend)
+# 6. LOCAL: http://localhost:8080 (Frontend) y :3000 (Backend)
+
+###############################################
+# COMANDOS CURL EQUIVALENTES
+###############################################
+
+# PRODUCCIÓN (http://35.222.67.75:3000)
+# Health Check
+# curl -X GET "http://35.222.67.75:3000/api/health"
+
+# Búsqueda simple
+# curl -X GET "http://35.222.67.75:3000/api/search?q=cancer"
+
+# Búsqueda con paginación
+# curl -X GET "http://35.222.67.75:3000/api/search?q=covid&page=1&rows=10"
+
+# Obtener artículo por DOI
+# curl -X GET "http://35.222.67.75:3000/api/search/article/10.1371/journal.pone.0000001"
+
+# LOCAL (http://localhost:3000)
+# curl -X GET "http://localhost:3000/api/health"
+# curl -X GET "http://localhost:3000/api/search?q=cancer"
